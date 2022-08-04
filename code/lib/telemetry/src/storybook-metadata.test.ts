@@ -121,6 +121,68 @@ describe('await computeStorybookMetadata', () => {
     `);
   });
 
+  test('should handle special addon names', async () => {
+    const result = await computeStorybookMetadata({
+      packageJson: {
+        ...packageJsonMock,
+        devDependencies: {
+          '@storybook/preset-create-react-app': 'x.x.x',
+          '@storybook/addon-knobs': 'x.x.x',
+          '@storybook/addon-ends-with-js': 'x.x.x',
+          'storybook-addon-deprecated': 'x.x.x',
+          'storybook-addon-ends-with-js': 'x.x.x',
+        },
+      },
+      mainConfig: {
+        ...mainJsMock,
+        addons: [
+          '@storybook/preset-create-react-app',
+          'storybook-addon-deprecated/register',
+          'storybook-addon-ends-with-js/register.js',
+          '@storybook/addon-knobs/preset',
+          '@storybook/addon-ends-with-js/preset.js',
+          '@storybook/addon-postcss/dist/index.js',
+          '../local-addon/register.js',
+          '../../',
+          'C:\\Users\\foo\\bar\\register.js',
+          'F:\\Users\\foo\\bar\\register.js',
+          'D:\\Users\\foo\\bar\\register.js',
+          '/Users/foo/bar/register.js',
+          '\\Users/foo/bar/register.js',
+        ],
+      },
+    });
+
+    expect(result.addons).toMatchInlineSnapshot(`
+      Object {
+        "@storybook/addon-ends-with-js": Object {
+          "options": undefined,
+          "version": "x.x.x",
+        },
+        "@storybook/addon-knobs": Object {
+          "options": undefined,
+          "version": "x.x.x",
+        },
+        "@storybook/addon-postcss": Object {
+          "options": undefined,
+          "version": "x.x.x",
+        },
+        "@storybook/preset-create-react-app": Object {
+          "options": undefined,
+          "version": "x.x.x",
+        },
+        "storybook-addon-deprecated": Object {
+          "options": undefined,
+          "version": "x.x.x",
+        },
+        "storybook-addon-ends-with-js": Object {
+          "options": undefined,
+          "version": "x.x.x",
+        },
+      }
+    `);
+  });
+
   test('should return user specified features', async () => {
     const features = {
       interactionsDebugger: true,

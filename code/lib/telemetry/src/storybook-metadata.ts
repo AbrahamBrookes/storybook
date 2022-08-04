@@ -125,19 +125,46 @@ export const computeStorybookMetadata = async ({
     metadata.features = mainConfig.features;
   }
 
+  const filterLocalAddons = (addon: string | { name: string }) => {
+    const isLocalAddon = (addon: string) =>
+      addon.startsWith('.') ||
+      addon.startsWith('/') ||
+      // for local Windows files e.g. (C: F: D:)
+      /\w:.*/.test(addon) ||
+      addon.startsWith('\\');
+    if (typeof addon === 'string' && !isLocalAddon(addon)) {
+      return true;
+    }
+    if (typeof addon === 'object' && !isLocalAddon(addon.name)) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const sanitizeAddonName = (name: string) => {
+    return name
+      .replace(/\/dist\/.*/, '')
+      .replace(/\.[mc]?[tj]?s[x]?$/, '')
+      .replace(/\/register$/, '')
+      .replace(/\/manager$/, '')
+      .replace(/\/preset$/, '');
+  };
+
   const addons: Record<string, StorybookAddon> = {};
   if (mainConfig.addons) {
-    mainConfig.addons.forEach((addon) => {
-      let result;
+    mainConfig.addons.filter(filterLocalAddons).forEach((addon) => {
+      let addonName;
       let options;
+
       if (typeof addon === 'string') {
-        result = addon.replace('/register', '').replace('/preset', '');
+        addonName = sanitizeAddonName(addon);
       } else {
         options = addon.options;
-        result = addon.name;
+        addonName = sanitizeAddonName(addon.name);
       }
 
-      addons[result] = {
+      addons[addonName] = {
         options,
         version: undefined,
       };
